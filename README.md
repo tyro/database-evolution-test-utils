@@ -1,5 +1,6 @@
 # database-evolution-test-utils
 
+[![Build Status](https://travis-ci.org/tyro/database-evolution-test-utils.svg?branch=master)](https://travis-ci.org/tyro/database-evolution-test-utils)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
 A simple library for testing liquibase database migrations.
