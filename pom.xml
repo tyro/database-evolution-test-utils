@@ -5,14 +5,14 @@
 
     <groupId>com.tyro.oss</groupId>
     <artifactId>database-evolution-test-utils</artifactId>
-    <version>1.0</version>
+    <version>1.1-SNAPSHOT</version>
     <url>https://github.com/tyro/database-evolution-test-utils</url>
 
     <scm>
         <connection>scm:git:https://github.com/tyro/database-evolution-test-utils.git</connection>
         <developerConnection>scm:git:https://github.com/tyro/database-evolution-test-utils.git</developerConnection>
         <url>https://github.com/tyro/database-evolution-test-utils</url>
-        <tag>1.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <dependencyManagement>
