@@ -1,9 +1,22 @@
 # database-evolution-test-utils
 
+[![Download](https://maven-badges.herokuapp.com/maven-central/com.tyro.oss/database-evolution-test-utils/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.tyro.oss/database-evolution-test-utils)
 [![Build Status](https://travis-ci.org/tyro/database-evolution-test-utils.svg?branch=master)](https://travis-ci.org/tyro/database-evolution-test-utils)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
 A simple library for testing liquibase database migrations.
+
+## Getting Started
+
+database-evolution-test-utils is available on Maven Central.
+```xml
+<dependency>
+    <groupId>com.tyro.oss</groupId>
+    <artifactId>database-evolution-test-utils</artifactId>
+    <version>1.0</version>
+    <scope>test</scope>
+</dependency>
+```
 
 ## Copyright and Licensing
 
