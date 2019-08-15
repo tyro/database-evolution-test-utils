@@ -6,6 +6,8 @@
     <groupId>com.tyro.oss</groupId>
     <artifactId>database-evolution-test-utils</artifactId>
     <version>1.1-SNAPSHOT</version>
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>A simple library for testing liquibase database migrations.</description>
     <url>https://github.com/tyro/database-evolution-test-utils</url>
 
     <scm>
