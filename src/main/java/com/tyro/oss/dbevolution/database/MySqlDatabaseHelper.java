@@ -66,8 +66,8 @@ public class MySqlDatabaseHelper implements DatabaseHelper {
         if (basicDataSource == null) {
             basicDataSource = new BasicDataSource();
             basicDataSource.setUrl(getUrl());
-            basicDataSource.setUsername(databaseDetails.getUsername());
-            basicDataSource.setPassword(databaseDetails.getPassword());
+            basicDataSource.setUsername(databaseDetails.getMigrationUser());
+            basicDataSource.setPassword(databaseDetails.getMigrationPassword());
             basicDataSource.setDefaultAutoCommit(false);
             basicDataSource.setMaxIdle(10);
         }
@@ -158,8 +158,8 @@ public class MySqlDatabaseHelper implements DatabaseHelper {
     private void createSchemaSnapshot(File targetFile, boolean includeData) throws CommandExecutionException {
         commandLineHelper.executeCommand(new String[]{
                 "mysqldump",
-                "--user=" + databaseDetails.getUsername(),
-                "--password=" + databaseDetails.getPassword(),
+                "--user=" + databaseDetails.getAdminUser(),
+                "--password=" + databaseDetails.getAdminPassword(),
                 "--host=" + databaseDetails.getHost(),
                 "--port=" + databaseDetails.getPort(),
                 "--no-data=" + (includeData ? "false" : "true"),
@@ -171,8 +171,8 @@ public class MySqlDatabaseHelper implements DatabaseHelper {
         appendToSnapshot(targetFile, "USE mysql;");
         commandLineHelper.executeCommand(new String[]{
                 "mysqldump",
-                "--user=" + databaseDetails.getUsername(),
-                "--password=" + databaseDetails.getPassword(),
+                "--user=" + databaseDetails.getAdminUser(),
+                "--password=" + databaseDetails.getAdminPassword(),
                 "--host=" + databaseDetails.getHost(),
                 "--port=" + databaseDetails.getPort(),
                 "--no-create-info",
@@ -185,8 +185,8 @@ public class MySqlDatabaseHelper implements DatabaseHelper {
     private void executeStatement(String statement) throws CommandExecutionException {
         commandLineHelper.executeCommand(new String[]{
                 "mysql",
-                "--user=" + databaseDetails.getUsername(),
-                "--password=" + databaseDetails.getPassword(),
+                "--user=" + databaseDetails.getAdminUser(),
+                "--password=" + databaseDetails.getAdminPassword(),
                 "--host=" + databaseDetails.getHost(),
                 "--port=" + databaseDetails.getPort(),
                 "--execute=" + statement});

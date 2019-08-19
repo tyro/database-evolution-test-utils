@@ -23,6 +23,8 @@ import org.springframework.core.io.Resource;
 import java.io.File;
 import java.io.IOException;
 
+import static com.tyro.oss.dbevolution.DatabaseDetails.withDatabaseDetails;
+
 public class DatabaseHelperFactory {
 
     public static DatabaseHelper newInstance(DatabaseDetails databaseDetails, Resource defaultSchemaResource) {
@@ -31,7 +33,12 @@ public class DatabaseHelperFactory {
 
     public static DatabaseHelper newInstance(SchemaDetails schemaDetails) throws IOException {
         File schemaTempFile = File.createTempFile(LiquiBaseMigrationScriptTestBase.class.getSimpleName(), ".tmp.sql");
-        DatabaseDetails databaseDetails = DatabaseDetails.withDatabaseDetails(schemaDetails.username(), schemaDetails.password(), schemaDetails.url());
+        DatabaseDetails databaseDetails = withDatabaseDetails(
+                schemaDetails.migrationUser(),
+                schemaDetails.migrationPassword(),
+                schemaDetails.adminUser(),
+                schemaDetails.adminPassword(),
+                schemaDetails.url());
         return new MySqlDatabaseHelper(databaseDetails, schemaTempFile);
     }
 }

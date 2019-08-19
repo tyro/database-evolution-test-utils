@@ -20,22 +20,26 @@ public class DatabaseDetails {
     private final String host;
     private final String port;
     private final String schemaName;
-    private final String username;
-    private final String password;
+    private final String migrationUser;
+    private final String migrationPassword;
+    private final String adminUser;
+    private final String adminPassword;
     private final String url;
 
-    public DatabaseDetails(String host, String port, String schemaName, String username, String password, String url) {
+    public DatabaseDetails(String host, String port, String schemaName, String migrationUser, String migrationPassword,  String adminUser, String adminPassword, String url) {
         this.host = host;
         this.port = port;
         this.schemaName = schemaName;
-        this.username = username;
-        this.password = password;
+        this.migrationUser = migrationUser;
+        this.migrationPassword = migrationPassword;
+        this.adminUser = adminUser;
+        this.adminPassword = adminPassword;
         this.url = url;
     }
 
-    public static DatabaseDetails withDatabaseDetails(String username, String password, String url) {
+    public static DatabaseDetails withDatabaseDetails(String migrationUser, String migrationPassword, String adminUser, String adminPassword, String url) {
         DatabaseUrl databaseUrl = new DatabaseUrl(url);
-        return new DatabaseDetails(databaseUrl.getHost(), databaseUrl.getPort(), databaseUrl.getSchemaName(), username, password, url);
+        return new DatabaseDetails(databaseUrl.getHost(), databaseUrl.getPort(), databaseUrl.getSchemaName(), migrationUser, migrationPassword, adminUser, adminPassword, url);
     }
 
     public String getSchemaName() {
@@ -50,12 +54,20 @@ public class DatabaseDetails {
         return port;
     }
 
-    public String getUsername() {
-        return username;
+    public String getMigrationUser() {
+        return migrationUser;
     }
 
-    public String getPassword() {
-        return password;
+    public String getMigrationPassword() {
+        return migrationPassword;
+    }
+
+    public String getAdminUser() {
+        return adminUser;
+    }
+
+    public String getAdminPassword() {
+        return adminPassword;
     }
 
     public String getUrl() {

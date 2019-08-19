@@ -23,11 +23,15 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface SchemaDetails {
-    String snapshotScript();
+    String migrationUser();
 
-    String username();
+    String migrationPassword();
 
-    String password();
+    String adminUser();
+
+    String adminPassword();
 
     String url();
+
+    String snapshotScript();
 }
