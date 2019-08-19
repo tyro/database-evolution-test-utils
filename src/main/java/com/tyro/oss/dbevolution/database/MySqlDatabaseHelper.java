@@ -27,17 +27,12 @@ import javax.sql.DataSource;
 import java.io.*;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
 
 import static java.lang.String.format;
 
 public class MySqlDatabaseHelper implements DatabaseHelper {
 
     private static final Log LOG = LogFactory.getLog(MySqlDatabaseHelper.class);
-    private static final String DEFAULT_DRIVER_CLASS_NAME = "com.mysql.jdbc.Driver";
-    private static final String MAX_ALLOWED_PACKET_SIZE_VARIABLE = "--max_allowed_packet=32M";
 
     private static BasicDataSource basicDataSource;
 
@@ -56,13 +51,6 @@ public class MySqlDatabaseHelper implements DatabaseHelper {
         this.commandLineHelper = new CommandLineHelper();
     }
 
-    private static void appendToSnapshot(File targetFile, String str) throws IOException {
-        try (Writer writer = new FileWriter(targetFile, true)) {
-            writer.write(str);
-            writer.write("\n");
-        }
-    }
-
     @Override
     public DatabaseDetails getDatabaseDetails() {
         return databaseDetails;
@@ -77,7 +65,6 @@ public class MySqlDatabaseHelper implements DatabaseHelper {
     public DataSource getDataSource() {
         if (basicDataSource == null) {
             basicDataSource = new BasicDataSource();
-            basicDataSource.setDriverClassName(DEFAULT_DRIVER_CLASS_NAME);
             basicDataSource.setUrl(getUrl());
             basicDataSource.setUsername(databaseDetails.getUsername());
             basicDataSource.setPassword(databaseDetails.getPassword());
@@ -104,15 +91,11 @@ public class MySqlDatabaseHelper implements DatabaseHelper {
     }
 
     @Override
-    public void executeStatement(String sql) throws SQLException {
-        try (Statement statement = getConnection().createStatement()) {
-            statement.execute(sql);
-        }
-    }
-
-    @Override
     public void dropAndRecreateDatabase() throws CommandExecutionException {
-        executeDbCommand(format("drop database if exists %s; create database %s", databaseDetails.getSchemaName(), databaseDetails.getSchemaName()));
+        executeStatement(
+                format("drop database if exists %s; create database %s",
+                        databaseDetails.getSchemaName(),
+                        databaseDetails.getSchemaName()));
     }
 
     @Override
@@ -129,16 +112,12 @@ public class MySqlDatabaseHelper implements DatabaseHelper {
 
     @Override
     public void dropAndRecreateDatabaseFromSnapshotThatIsAlreadyOnDisk(File absoluteFileName) throws CommandExecutionException {
-        executeDbCommandAsDevelopmentUser("drop database if exists " + databaseDetails.getSchemaName()
-                + "; create database " + databaseDetails.getSchemaName()
-                + "; use " + databaseDetails.getSchemaName()
-                + "; \\. " + absoluteFileName.getAbsoluteFile());
-    }
-
-    @Override
-    public void loadSnapshot() throws CommandExecutionException {
-        File fileToSource = writeSnapshotThatMightBeInAJarFileToAPlainOldFileOnDisk(defaultSchemaResource);
-        executeSchemaCommand("source " + fileToSource.getAbsoluteFile());
+        executeStatement(
+                format("drop database if exists %s; create database %s; use %s; \\. %s",
+                        databaseDetails.getSchemaName(),
+                        databaseDetails.getSchemaName(),
+                        databaseDetails.getSchemaName(),
+                        absoluteFileName.getAbsoluteFile()));
     }
 
     @Override
@@ -146,14 +125,14 @@ public class MySqlDatabaseHelper implements DatabaseHelper {
         try {
             File snapshotFile = defaultSchemaResource.getFile();
             snapshotFile.deleteOnExit();
-            createSnapshots(snapshotFile, includeData);
+            createSnapshot(snapshotFile, includeData);
         } catch (IOException e) {
             throw new CommandExecutionException(e);
         }
     }
 
     @Override
-    public void createSnapshots(File targetFile, boolean includeData) throws CommandExecutionException, IOException {
+    public void createSnapshot(File targetFile, boolean includeData) throws CommandExecutionException, IOException {
         createSchemaSnapshot(targetFile, includeData);
         createTablePrivilegesSnapshot(targetFile);
     }
@@ -177,52 +156,46 @@ public class MySqlDatabaseHelper implements DatabaseHelper {
     }
 
     private void createSchemaSnapshot(File targetFile, boolean includeData) throws CommandExecutionException {
-        List<String> params = new ArrayList<>();
-        params.add("mysqldump");
-        params.add(MAX_ALLOWED_PACKET_SIZE_VARIABLE);
-        params.add("--user=" + databaseDetails.getUsername());
-        params.add("--password=" + databaseDetails.getPassword());
-        params.add("--host=" + databaseDetails.getHost());
-        params.add("--port=" + databaseDetails.getPort());
-        params.add("--protocol=tcp");
-        if (!includeData) {
-            params.add("--no-data");
-        }
-        params.add(databaseDetails.getSchemaName());
-        commandLineHelper.executeCommand(params.toArray(new String[0]), targetFile, false);
+        commandLineHelper.executeCommand(new String[]{
+                "mysqldump",
+                "--user=" + databaseDetails.getUsername(),
+                "--password=" + databaseDetails.getPassword(),
+                "--host=" + databaseDetails.getHost(),
+                "--port=" + databaseDetails.getPort(),
+                "--no-data=" + (includeData ? "false" : "true"),
+                databaseDetails.getSchemaName()}, targetFile, false);
     }
 
     private void createTablePrivilegesSnapshot(File targetFile) throws CommandExecutionException, IOException {
         appendToSnapshot(targetFile, "-- Switching to mysql database to migrate tables_priv");
         appendToSnapshot(targetFile, "USE mysql;");
-        List<String> params = new ArrayList<>();
-        params.add("mysqldump");
-        params.add(MAX_ALLOWED_PACKET_SIZE_VARIABLE);
-        params.add("--user=development");
-        params.add("--password=" + databaseDetails.getPassword());
-        params.add("--host=" + databaseDetails.getHost());
-        params.add("--port=" + databaseDetails.getPort());
-        params.add("--protocol=tcp");
-        params.add("--no-create-info");
-        params.add("--replace");
-        params.add("mysql");
-        params.add("--tables");
-        params.add("tables_priv");
-        params.add("--where=Db='" + databaseDetails.getSchemaName() + "'");
-        commandLineHelper.executeCommand(params.toArray(new String[0]), targetFile, true);
+        commandLineHelper.executeCommand(new String[]{
+                "mysqldump",
+                "--user=" + databaseDetails.getUsername(),
+                "--password=" + databaseDetails.getPassword(),
+                "--host=" + databaseDetails.getHost(),
+                "--port=" + databaseDetails.getPort(),
+                "--no-create-info",
+                "--replace", "mysql",
+                "--tables", "tables_priv",
+                "--where=Db='" + databaseDetails.getSchemaName() + "'"}, targetFile, true);
         appendToSnapshot(targetFile, "FLUSH PRIVILEGES;");
     }
 
-    private String executeDbCommand(String mySqlCommand) throws CommandExecutionException {
-        return commandLineHelper.executeCommand(new String[]{"mysql", MAX_ALLOWED_PACKET_SIZE_VARIABLE, "--user=" + databaseDetails.getUsername(), "--password=" + databaseDetails.getPassword(), "--host=" + databaseDetails.getHost(), "--protocol=tcp", "--execute=" + mySqlCommand});
+    private void executeStatement(String statement) throws CommandExecutionException {
+        commandLineHelper.executeCommand(new String[]{
+                "mysql",
+                "--user=" + databaseDetails.getUsername(),
+                "--password=" + databaseDetails.getPassword(),
+                "--host=" + databaseDetails.getHost(),
+                "--port=" + databaseDetails.getPort(),
+                "--execute=" + statement});
     }
 
-    private String executeDbCommandAsDevelopmentUser(String mySqlCommand) throws CommandExecutionException {
-        return commandLineHelper.executeCommand(new String[]{"mysql", MAX_ALLOWED_PACKET_SIZE_VARIABLE, "--user=development", "--password=" + databaseDetails.getPassword(), "--host=" + databaseDetails.getHost(), "--port=" + databaseDetails.getPort(), "--protocol=tcp", "--execute=" + mySqlCommand});
-    }
-
-    private void executeSchemaCommand(String mySqlCommand) throws CommandExecutionException {
-        commandLineHelper.executeCommand(new String[]{"mysql", MAX_ALLOWED_PACKET_SIZE_VARIABLE, "--user=" + databaseDetails.getUsername(), "--password=" + databaseDetails.getPassword(), "--host=" + databaseDetails.getHost(), "--protocol=tcp", databaseDetails.getSchemaName(), "--execute=" + mySqlCommand});
+    private void appendToSnapshot(File targetFile, String str) throws IOException {
+        try (Writer writer = new FileWriter(targetFile, true)) {
+            writer.write(str);
+            writer.write("\n");
+        }
     }
 }
-

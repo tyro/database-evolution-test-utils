@@ -53,7 +53,7 @@ public class SnapshotAndLiquibaseMigrationStrategy implements DatabaseCreationSt
     }
 
     private void saveTemporarySnapshotToSaveRemigrating(DatabaseHelper databaseHelper) throws CommandExecutionException, IOException {
-        databaseHelper.createSnapshots(migratedSnapshotFile, true);
+        databaseHelper.createSnapshot(migratedSnapshotFile, true);
         temporarySnapshotPopulated = true;
     }
 

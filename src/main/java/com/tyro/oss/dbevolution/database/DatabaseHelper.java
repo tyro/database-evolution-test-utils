@@ -36,8 +36,6 @@ public interface DatabaseHelper {
 
     void closeConnection() throws SQLException;
 
-    void executeStatement(String sql) throws SQLException;
-
     void dropAndRecreateDatabase() throws CommandExecutionException;
 
     void dropAndRecreateDatabaseFromSnapshot() throws CommandExecutionException, SQLException;
@@ -46,9 +44,7 @@ public interface DatabaseHelper {
 
     void dropAndRecreateDatabaseFromSnapshotThatIsAlreadyOnDisk(File absoluteFileName) throws CommandExecutionException;
 
-    void loadSnapshot() throws CommandExecutionException;
-
     void createSnapshot(boolean includeData) throws CommandExecutionException;
 
-    void createSnapshots(File targetFile, boolean includeData) throws CommandExecutionException, IOException;
+    void createSnapshot(File targetFile, boolean includeData) throws CommandExecutionException, IOException;
 }
