@@ -25,7 +25,6 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
-import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
 public class TableAssert {
@@ -56,7 +55,6 @@ public class TableAssert {
     private void assertTableNotPresent(Database database, String tableName) {
         assertNull("Table " + tableName + " should not exist", database.findTable(tableName));
     }
-
 
     public ColumnAssert hasColumn(String columnName) {
         return new ColumnAssert(schema, this, columnName).isPresent();
@@ -110,7 +108,6 @@ public class TableAssert {
         }
         return this;
     }
-
 
     private TableAssert testForIndexOnColumns(boolean wantToFindIndex, boolean isUniqueIndex, String... columnNames) {
         Index matchingIndex = indexOnColumns(columnNames);
@@ -182,7 +179,7 @@ public class TableAssert {
                 }
             }
         }
-        assertThat(format("Foreign Key from column %s to table %s column %s does not exit", localTableColumn, foreignTableName, foreignTableColumn), matchFound, is(true));
+        assertTrue(format("Foreign Key from column %s to table %s column %s does not exit", localTableColumn, foreignTableName, foreignTableColumn), matchFound);
 
         return this;
     }

@@ -31,7 +31,6 @@ import java.util.Map;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.join;
-import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
 public class DataAssert {
@@ -68,13 +67,13 @@ public class DataAssert {
 
     public DataAssert hasRowWithValues(Map<String, Object> columnValues) throws SQLException {
         ResultSet results = selectRowsWithColumnValues(tableName, columnValues);
-        assertThat(results.next(), is(true));
+        assertTrue(results.next());
         return this;
     }
 
     public DataAssert doesNotHaveRowWithValues(Map<String, Object> columnValues) throws SQLException {
         ResultSet results = selectRowsWithColumnValues(tableName, columnValues);
-        assertThat(results.next(), is(false));
+        assertFalse(results.next());
         return this;
     }
 
@@ -102,22 +101,22 @@ public class DataAssert {
         List<Row> rowsForTableA = getRowsForTable(tableA, columnNames, connection);
         List<Row> rowsForTableB = getRowsForTable(tableB, columnNames, connection);
 
-        assertThat(format("%s does not have the same number of rows as %s", tableA, tableB), rowsForTableA.size(), is(rowsForTableB.size()));
-        assertThat(rowsForTableA, is(rowsForTableB));
+        assertEquals(format("%s does not have the same number of rows as %s", tableA, tableB), rowsForTableA.size(), rowsForTableB.size());
+        assertEquals(rowsForTableA, rowsForTableB);
 
         return this;
     }
 
     public DataAssert hasColumnsMatching(String[] columnA, String[] columnB) throws SQLException {
-        assertThat(columnA.length, is(columnB.length));
+        assertEquals(columnA.length, columnB.length);
 
         PreparedStatement preparedStatement = connection.prepareStatement(buildColumnComparisonSelectStatement(tableName, columnA, columnB));
         ResultSet rs = preparedStatement.executeQuery();
 
-        assertThat(rs.next(), is(true));
+        assertTrue(rs.next());
         do {
             for (int i = 1; i < columnA.length + 1; i++) {
-                assertThat("column " + columnA[i - 1] + " didn't match " + columnB[i - 1], rs.getBoolean(i), is(true));
+                assertTrue("column " + columnA[i - 1] + " didn't match " + columnB[i - 1], rs.getBoolean(i));
             }
         } while (rs.next());
 

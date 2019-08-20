@@ -21,13 +21,13 @@ import liquibase.datatype.core.TinyIntType;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
-import org.hamcrest.Matcher;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.sql.Types;
 import java.time.*;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.tyro.oss.dbevolution.assertions.ColumnAssert.StandardStringColumnAssertions.DEFAULT_VARCHAR_MAX_LENGTH;
@@ -35,10 +35,7 @@ import static com.tyro.oss.dbevolution.assertions.SchemaAssert.*;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.core.AnyOf.anyOf;
-import static org.hamcrest.core.IsEqual.equalTo;
-import static org.hamcrest.number.OrderingComparison.greaterThanOrEqualTo;
+import static java.util.stream.Collectors.toList;
 
 public class ColumnAssert {
 
@@ -65,8 +62,8 @@ public class ColumnAssert {
     private static void assertColumnMinimalSize(Database database, String tableName, String columnName, int columnSize) {
         Table table = database.findTable(tableName);
         int actualColumnSize = table.findColumn(columnName).getSizeAsInt();
-        String assertMessage = format("Size of %s.%s should be at least %d", tableName, columnName, columnSize);
-        assertThat(assertMessage, actualColumnSize, is(greaterThanOrEqualTo(columnSize)));
+        String message = format("Size of %s.%s should be at least %d, but was %s.", tableName, columnName, columnSize, actualColumnSize);
+        assertTrue(message, actualColumnSize >= columnSize);
     }
 
     private static void assertColumnScale(Database database, String tableName, String columnName, int columnScale) {
@@ -91,13 +88,13 @@ public class ColumnAssert {
 
         String actualType = sqlTypeToString(column.getTypeCode());
 
-        Matcher[] expectedTypes = stream(sqlTypes)
-                .mapToObj(sqlType -> equalTo(sqlTypeToString(sqlType)))
-                .toArray(Matcher[]::new);
+        List<String> expectedTypes = stream(sqlTypes)
+                .mapToObj(ColumnAssert::sqlTypeToString)
+                .collect(toList());
 
-        assertThat("Type of " + tableName + "." + columnName, actualType, anyOf(expectedTypes));
+        String message = format("Type of %s.%s should be one of %s, but was %s.", tableName, columnName, expectedTypes, actualType);
+        assertTrue(message, expectedTypes.contains(actualType));
     }
-
 
     private static String sqlTypeToString(int sqlType) {
         try {
@@ -111,7 +108,6 @@ public class ColumnAssert {
         }
         throw new IllegalArgumentException("Unknown SQL Type: " + sqlType);
     }
-
 
     private static void assertColumnIsLongType(Database database, String tableName, String columnName) {
         assertColumnIsType(database, tableName, columnName, Types.BIGINT);
@@ -396,7 +392,6 @@ public class ColumnAssert {
             return new DisableNullCheckAuthorisation(this.columnAssert);
         }
     }
-
 
     public static class DisableNullCheckAuthorisation {
 

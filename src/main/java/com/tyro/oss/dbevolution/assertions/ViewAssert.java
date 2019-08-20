@@ -23,16 +23,16 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.core.IsNot.not;
-import static org.hamcrest.core.IsNull.nullValue;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class ViewAssert {
 
+    private final String viewName;
     private Map<String, Column> columns;
 
     public ViewAssert(DatabaseMetaData databaseMetadata, Database schema, String viewName) throws SQLException {
+        this.viewName = viewName;
         ResultSet tables = databaseMetadata.getTables(null, schema.getName(), viewName, new String[]{"VIEW"});
         if (tables.next()) {
             this.columns = new HashMap<>();
@@ -52,12 +52,12 @@ public class ViewAssert {
     }
 
     public ViewAssert isPresent() {
-        assertThat(columns, is(not(nullValue())));
+        assertNotNull("View " + viewName + " does not exist.", columns);
         return this;
     }
 
     public void isNotPresent() {
-        assertThat(columns, is(nullValue()));
+        assertNull("View " + viewName + " should not exist.", columns);
     }
 
     public ViewColumnAssert hasColumn(String columnName) {
@@ -95,12 +95,12 @@ public class ViewAssert {
         }
 
         public ViewColumnAssert isPresent() {
-            assertThat("Column " + columnName + " doesn't exist", columns, is(not(nullValue())));
+            assertNotNull("Column " + columnName + " does not exist.", columns);
             return this;
         }
 
         public void isNotPresent() {
-            assertThat("Column " + columnName + " doesn't exist", columns, is(nullValue()));
+            assertNull("Column " + columnName + " should not exist.", columns);
         }
 
         public ViewColumnAssert hasColumn(String columnName) {
