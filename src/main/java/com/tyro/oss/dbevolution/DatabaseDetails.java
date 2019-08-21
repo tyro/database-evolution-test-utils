@@ -15,6 +15,8 @@
  */
 package com.tyro.oss.dbevolution;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 public class DatabaseDetails {
 
     private final String host;
@@ -35,6 +37,10 @@ public class DatabaseDetails {
         this.adminUser = adminUser;
         this.adminPassword = adminPassword;
         this.url = url;
+    }
+
+    public static DatabaseDetails withDatabaseDetails(String migrationUser, String migrationPassword, String url) {
+        return withDatabaseDetails(migrationUser, migrationPassword, null, null, url);
     }
 
     public static DatabaseDetails withDatabaseDetails(String migrationUser, String migrationPassword, String adminUser, String adminPassword, String url) {
@@ -63,11 +69,11 @@ public class DatabaseDetails {
     }
 
     public String getAdminUser() {
-        return adminUser;
+        return isNotBlank(adminUser) ? adminUser : migrationUser;
     }
 
     public String getAdminPassword() {
-        return adminPassword;
+        return isNotBlank(adminUser) ? adminPassword : migrationPassword;
     }
 
     public String getUrl() {

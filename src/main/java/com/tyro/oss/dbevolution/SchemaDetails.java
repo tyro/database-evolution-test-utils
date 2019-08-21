@@ -27,9 +27,9 @@ public @interface SchemaDetails {
 
     String migrationPassword();
 
-    String adminUser();
+    String adminUser() default "";
 
-    String adminPassword();
+    String adminPassword() default "";
 
     String url();
 
