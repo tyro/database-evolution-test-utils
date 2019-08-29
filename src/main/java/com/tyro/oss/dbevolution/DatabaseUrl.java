@@ -17,12 +17,9 @@ package com.tyro.oss.dbevolution;
 
 import java.net.URI;
 
-import static java.lang.String.valueOf;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 
 public class DatabaseUrl {
-
-    private static final String DEFAULT_MYSQL_PORT = "3306";
 
     private final URI uri;
 
@@ -30,9 +27,8 @@ public class DatabaseUrl {
         uri = URI.create(substringAfter(url, "jdbc:"));
     }
 
-    public String getPort() {
-        int port = uri.getPort();
-        return port == -1 ? DEFAULT_MYSQL_PORT : valueOf(port);
+    public int getPort() {
+        return uri.getPort();
     }
 
     public String getSchemaName() {

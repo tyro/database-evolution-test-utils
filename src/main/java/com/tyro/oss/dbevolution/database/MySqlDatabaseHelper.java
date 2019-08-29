@@ -161,7 +161,7 @@ public class MySqlDatabaseHelper implements DatabaseHelper {
                 "--user=" + databaseDetails.getAdminUser(),
                 "--password=" + databaseDetails.getAdminPassword(),
                 "--host=" + databaseDetails.getHost(),
-                "--port=" + databaseDetails.getPort(),
+                "--port=" + getPort(),
                 "--no-data=" + (includeData ? "false" : "true"),
                 databaseDetails.getSchemaName()}, targetFile, false);
     }
@@ -174,7 +174,7 @@ public class MySqlDatabaseHelper implements DatabaseHelper {
                 "--user=" + databaseDetails.getAdminUser(),
                 "--password=" + databaseDetails.getAdminPassword(),
                 "--host=" + databaseDetails.getHost(),
-                "--port=" + databaseDetails.getPort(),
+                "--port=" + getPort(),
                 "--no-create-info",
                 "--replace", "mysql",
                 "--tables", "tables_priv",
@@ -188,8 +188,12 @@ public class MySqlDatabaseHelper implements DatabaseHelper {
                 "--user=" + databaseDetails.getAdminUser(),
                 "--password=" + databaseDetails.getAdminPassword(),
                 "--host=" + databaseDetails.getHost(),
-                "--port=" + databaseDetails.getPort(),
+                "--port=" + getPort(),
                 "--execute=" + statement});
+    }
+
+    private int getPort() {
+        return databaseDetails.getPort() == -1 ? 3306 : databaseDetails.getPort();
     }
 
     private void appendToSnapshot(File targetFile, String str) throws IOException {

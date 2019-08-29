@@ -20,7 +20,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 public class DatabaseDetails {
 
     private final String host;
-    private final String port;
+    private final int port;
     private final String schemaName;
     private final String migrationUser;
     private final String migrationPassword;
@@ -28,7 +28,7 @@ public class DatabaseDetails {
     private final String adminPassword;
     private final String url;
 
-    public DatabaseDetails(String host, String port, String schemaName, String migrationUser, String migrationPassword,  String adminUser, String adminPassword, String url) {
+    public DatabaseDetails(String host, int port, String schemaName, String migrationUser, String migrationPassword,  String adminUser, String adminPassword, String url) {
         this.host = host;
         this.port = port;
         this.schemaName = schemaName;
@@ -56,7 +56,7 @@ public class DatabaseDetails {
         return host;
     }
 
-    public String getPort() {
+    public int getPort() {
         return port;
     }
 
