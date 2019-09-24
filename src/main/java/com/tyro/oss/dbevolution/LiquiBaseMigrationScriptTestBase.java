@@ -15,7 +15,6 @@
  */
 package com.tyro.oss.dbevolution;
 
-import com.tyro.oss.dbevolution.database.CommandExecutionException;
 import com.tyro.oss.dbevolution.database.DatabaseHelper;
 import liquibase.Liquibase;
 import liquibase.database.jvm.JdbcConnection;
@@ -72,9 +71,7 @@ public abstract class LiquiBaseMigrationScriptTestBase {
     }
 
     @Test
-    public void testDefinitionMigration() throws SQLException, LiquibaseException, CommandExecutionException {
-        databaseHelper.createSnapshot(true);
-
+    public void testDefinitionMigration() throws SQLException, LiquibaseException {
         try {
             definition.assertPreMigrationSchema(getDatabase(), getConnection());
             if (definition.disableReferentialIntegrityForInsertingPreMigrationData()) {
@@ -90,8 +87,7 @@ public abstract class LiquiBaseMigrationScriptTestBase {
             executeScript();
             definition.assertPostMigrationSchema(getDatabase(), getConnection());
             definition.assertPostMigrationData(getConnection());
-
-            runTheMigrationScriptWithoutPreMigrationData();
+            getConnection().commit();
         } finally {
             getConnection().close();
         }
@@ -99,12 +95,6 @@ public abstract class LiquiBaseMigrationScriptTestBase {
 
     public void allScriptsShouldBeTestedAndHavePreconditionsAndAllTestedFilesIncluded() throws Exception {
         migrationScriptsVerifier.allScriptsShouldBeTestedAndHavePreconditionsAndAllTestedFilesIncluded();
-    }
-
-    private void runTheMigrationScriptWithoutPreMigrationData() throws CommandExecutionException, SQLException, LiquibaseException {
-        databaseHelper.dropAndRecreateDatabaseFromSnapshot();
-        Liquibase migrator = new Liquibase(definition.getMigrationScriptFilename(), new ClassLoaderResourceAccessor(), new JdbcConnection(getConnection()));
-        migrator.update("production");
     }
 
     private void setReferentialIntegrity(boolean on) throws SQLException {

@@ -16,12 +16,8 @@
 package com.tyro.oss.dbevolution.database;
 
 import com.tyro.oss.dbevolution.DatabaseDetails;
-import com.tyro.oss.dbevolution.LiquiBaseMigrationScriptTestBase;
 import com.tyro.oss.dbevolution.SchemaDetails;
 import org.springframework.core.io.Resource;
-
-import java.io.File;
-import java.io.IOException;
 
 import static com.tyro.oss.dbevolution.DatabaseDetails.withDatabaseDetails;
 
@@ -31,14 +27,13 @@ public class DatabaseHelperFactory {
         return new MySqlDatabaseHelper(databaseDetails, defaultSchemaResource);
     }
 
-    public static DatabaseHelper newInstance(SchemaDetails schemaDetails) throws IOException {
-        File schemaTempFile = File.createTempFile(LiquiBaseMigrationScriptTestBase.class.getSimpleName(), ".tmp.sql");
+    public static DatabaseHelper newInstance(SchemaDetails schemaDetails, Resource defaultSchemaResource) {
         DatabaseDetails databaseDetails = withDatabaseDetails(
                 schemaDetails.migrationUser(),
                 schemaDetails.migrationPassword(),
                 schemaDetails.adminUser(),
                 schemaDetails.adminPassword(),
                 schemaDetails.url());
-        return new MySqlDatabaseHelper(databaseDetails, schemaTempFile);
+        return new MySqlDatabaseHelper(databaseDetails, defaultSchemaResource);
     }
 }

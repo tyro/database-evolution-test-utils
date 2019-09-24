@@ -53,7 +53,7 @@ public class LiquiBaseMigrationScriptsTestRunner extends BlockJUnit4ClassRunner 
             throw new NullPointerException("Please specify a @SchemaDetails and @MigrationScript annotation in your test.");
         }
 
-        databaseHelper = DatabaseHelperFactory.newInstance(schemaDetails);
+        databaseHelper = DatabaseHelperFactory.newInstance(schemaDetails, schemaSnapshot);
 
         DataSource dataSource = databaseHelper.getDataSource();
 

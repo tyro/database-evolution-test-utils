@@ -44,7 +44,5 @@ public interface DatabaseHelper {
 
     void dropAndRecreateDatabaseFromSnapshotThatIsAlreadyOnDisk(File absoluteFileName) throws CommandExecutionException;
 
-    void createSnapshot(boolean includeData) throws CommandExecutionException;
-
     void createSnapshot(File targetFile, boolean includeData) throws CommandExecutionException, IOException;
 }

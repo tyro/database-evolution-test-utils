@@ -20,7 +20,7 @@ import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.core.io.FileSystemResource;
+import org.apache.ibatis.jdbc.ScriptRunner;
 import org.springframework.core.io.Resource;
 
 import javax.sql.DataSource;
@@ -34,16 +34,13 @@ public class MySqlDatabaseHelper implements DatabaseHelper {
 
     private static final Log LOG = LogFactory.getLog(MySqlDatabaseHelper.class);
 
-    private static BasicDataSource basicDataSource;
+    private static BasicDataSource migrationDataSource;
+    private static BasicDataSource adminDataSource;
 
     private final DatabaseDetails databaseDetails;
     private final Resource defaultSchemaResource;
     private final CommandLineHelper commandLineHelper;
     private Connection connection;
-
-    public MySqlDatabaseHelper(DatabaseDetails databaseDetails, File defaultSchemaFile) {
-        this(databaseDetails, new FileSystemResource(defaultSchemaFile));
-    }
 
     public MySqlDatabaseHelper(DatabaseDetails databaseDetails, Resource defaultSchemaResource) {
         this.databaseDetails = databaseDetails;
@@ -63,15 +60,15 @@ public class MySqlDatabaseHelper implements DatabaseHelper {
 
     @Override
     public DataSource getDataSource() {
-        if (basicDataSource == null) {
-            basicDataSource = new BasicDataSource();
-            basicDataSource.setUrl(getUrl());
-            basicDataSource.setUsername(databaseDetails.getMigrationUser());
-            basicDataSource.setPassword(databaseDetails.getMigrationPassword());
-            basicDataSource.setDefaultAutoCommit(false);
-            basicDataSource.setMaxIdle(10);
+        if (migrationDataSource == null) {
+            migrationDataSource = new BasicDataSource();
+            migrationDataSource.setUrl(getUrl());
+            migrationDataSource.setUsername(databaseDetails.getMigrationUser());
+            migrationDataSource.setPassword(databaseDetails.getMigrationPassword());
+            migrationDataSource.setDefaultAutoCommit(false);
+            migrationDataSource.setMaxIdle(10);
         }
-        return basicDataSource;
+        return migrationDataSource;
     }
 
     @Override
@@ -93,8 +90,7 @@ public class MySqlDatabaseHelper implements DatabaseHelper {
     @Override
     public void dropAndRecreateDatabase() throws CommandExecutionException {
         executeStatement(
-                format("drop database if exists %s; create database %s",
-                        databaseDetails.getSchemaName(),
+                format("drop database if exists %%1$s; create database %1$s;",
                         databaseDetails.getSchemaName()));
     }
 
@@ -112,23 +108,10 @@ public class MySqlDatabaseHelper implements DatabaseHelper {
 
     @Override
     public void dropAndRecreateDatabaseFromSnapshotThatIsAlreadyOnDisk(File absoluteFileName) throws CommandExecutionException {
-        executeStatement(
-                format("drop database if exists %s; create database %s; use %s; \\. %s",
-                        databaseDetails.getSchemaName(),
-                        databaseDetails.getSchemaName(),
-                        databaseDetails.getSchemaName(),
-                        absoluteFileName.getAbsoluteFile()));
-    }
-
-    @Override
-    public void createSnapshot(boolean includeData) throws CommandExecutionException {
-        try {
-            File snapshotFile = defaultSchemaResource.getFile();
-            snapshotFile.deleteOnExit();
-            createSnapshot(snapshotFile, includeData);
-        } catch (IOException e) {
-            throw new CommandExecutionException(e);
-        }
+        executeStatement("drop database if exists " + databaseDetails.getSchemaName());
+        executeStatement("create database " + databaseDetails.getSchemaName());
+        executeStatement("use " + databaseDetails.getSchemaName());
+        executeScript(absoluteFileName);
     }
 
     @Override
@@ -183,13 +166,24 @@ public class MySqlDatabaseHelper implements DatabaseHelper {
     }
 
     private void executeStatement(String statement) throws CommandExecutionException {
-        commandLineHelper.executeCommand(new String[]{
-                "mysql",
-                "--user=" + databaseDetails.getAdminUser(),
-                "--password=" + databaseDetails.getAdminPassword(),
-                "--host=" + databaseDetails.getHost(),
-                "--port=" + getPort(),
-                "--execute=" + statement});
+        DataSource dataSource = getAdminDataSource();
+        try (Connection connection = dataSource.getConnection()) {
+            connection.createStatement().execute(statement);
+        } catch (SQLException e) {
+            throw new CommandExecutionException(e);
+        }
+    }
+
+    private void executeScript(File scriptFile) throws CommandExecutionException {
+        DataSource dataSource = getAdminDataSource();
+        try (Connection connection = dataSource.getConnection()) {
+            Reader reader = new BufferedReader(new FileReader(scriptFile.getAbsoluteFile()));
+            ScriptRunner scriptRunner = new ScriptRunner(connection);
+            scriptRunner.setLogWriter(null);
+            scriptRunner.runScript(reader);
+        } catch (Exception e) {
+            throw new CommandExecutionException(e);
+        }
     }
 
     private int getPort() {
@@ -201,5 +195,15 @@ public class MySqlDatabaseHelper implements DatabaseHelper {
             writer.write(str);
             writer.write("\n");
         }
+    }
+
+    private DataSource getAdminDataSource() {
+        if (adminDataSource == null) {
+            adminDataSource = new BasicDataSource();
+            adminDataSource.setUrl(getUrl());
+            adminDataSource.setUsername(databaseDetails.getAdminUser());
+            adminDataSource.setPassword(databaseDetails.getAdminPassword());
+        }
+        return adminDataSource;
     }
 }
