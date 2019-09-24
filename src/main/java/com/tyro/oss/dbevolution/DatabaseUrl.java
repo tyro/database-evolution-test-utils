@@ -16,6 +16,8 @@
 package com.tyro.oss.dbevolution;
 
 import java.net.URI;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 
@@ -24,7 +26,7 @@ public class DatabaseUrl {
     private final URI uri;
 
     public DatabaseUrl(String url) {
-        uri = URI.create(substringAfter(url, "jdbc:"));
+        uri = parseJdbcUrl(url);
     }
 
     public int getPort() {
@@ -37,5 +39,14 @@ public class DatabaseUrl {
 
     public String getHost() {
         return uri.getHost();
+    }
+
+    private URI parseJdbcUrl(String url) {
+        Matcher matcher = Pattern.compile("jdbc:\\w+:(.+)").matcher(url);
+        if (matcher.find()) {
+            return URI.create(matcher.group(1));
+        } else {
+            throw new IllegalArgumentException("Invalid jdbc url: " + url);
+        }
     }
 }
