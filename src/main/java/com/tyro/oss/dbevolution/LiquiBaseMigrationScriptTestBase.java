@@ -29,10 +29,12 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.core.io.Resource;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 import static org.apache.ddlutils.PlatformFactory.createNewPlatformInstance;
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 public abstract class LiquiBaseMigrationScriptTestBase {
 
@@ -129,14 +131,6 @@ public abstract class LiquiBaseMigrationScriptTestBase {
         String migrationScript = definition.getMigrationScriptFilename();
         Liquibase migrator = new Liquibase(migrationScript, new ClassLoaderResourceAccessor(), new JdbcConnection(getConnection()));
         migrator.update("production");
-
-        PreparedStatement ps = databaseHelper.getConnection().prepareStatement("select COMMENTS from DATABASECHANGELOG where FILENAME = ?");
-        ps.setString(1, migrationScript);
-        ResultSet rs = ps.executeQuery();
-        assertTrue(rs.next());
-        String comments = rs.getString("COMMENTS");
-        assertNotNull("The " + migrationScript + " change log requires a comment tag", comments);
-        assertEquals("Comments tag should match release (migration script location) in " + migrationScript, definition.getMigrationScriptLocation(), comments);
     }
 }
 

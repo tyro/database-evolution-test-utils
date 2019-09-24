@@ -100,9 +100,7 @@ public class MigrationScriptsVerifier {
     private void checkAllChangeLogsHaveAppropriatePreconditions() {
         List<ChangeSet> changeSets = changeLog.getChangeSets();
         for (ChangeSet changeSet : changeSets) {
-            String comments = changeSet.getComments();
             String changeSetName = changeSet.getFilePath();
-            assertNotNull(changeSetName + " requires a comment specifying the release version.", comments);
 
             PreconditionContainer preconditions = changeSet.getPreconditions();
 
