@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd">
+
+    <changeSet id='20191001' author='sorourke'>
+        <preConditions>
+            <not>
+                <tableExists tableName="ExampleTable"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="ExampleTable">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="column1" type="varchar(255)"/>
+            <column name="column2" type="bigint"/>
+            <column name="column3" type="bit(1)"/>
+            <column name="column4" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="ExampleTable" indexName="idx_ExampleTable_column1_column2">
+            <column name="column1"/>
+            <column name="column2"/>
+        </createIndex>
+
+        <createIndex tableName="ExampleTable" indexName="idx_ExampleTable_column4" unique="true">
+            <column name="column4"/>
+        </createIndex>
+
+    </changeSet>
+</databaseChangeLog>
