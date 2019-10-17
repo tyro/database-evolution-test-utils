@@ -23,8 +23,9 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static java.lang.String.format;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class ViewAssert {
 
@@ -52,12 +53,14 @@ public class ViewAssert {
     }
 
     public ViewAssert isPresent() {
-        assertNotNull("View " + viewName + " does not exist.", columns);
+        assertNotNull(columns,
+                format("View %s does not exist.", viewName));
         return this;
     }
 
     public void isNotPresent() {
-        assertNull("View " + viewName + " should not exist.", columns);
+        assertNull(columns,
+                format("View %s should not exist.", viewName));
     }
 
     public ViewColumnAssert hasColumn(String columnName) {
@@ -95,12 +98,14 @@ public class ViewAssert {
         }
 
         public ViewColumnAssert isPresent() {
-            assertNotNull("Column " + columnName + " does not exist.", columns);
+            assertNotNull(columns,
+                    format("Column %s does not exist.", columnName));
             return this;
         }
 
         public void isNotPresent() {
-            assertNull("Column " + columnName + " should not exist.", columns);
+            assertNull(columns,
+                    format("Column %s should not exist.", columnName));
         }
 
         public ViewColumnAssert hasColumn(String columnName) {

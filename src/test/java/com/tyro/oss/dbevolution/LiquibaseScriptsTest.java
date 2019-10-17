@@ -15,27 +15,28 @@
  */
 package com.tyro.oss.dbevolution;
 
-import org.junit.ClassRule;
-import org.junit.runner.RunWith;
 import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
 
 import static java.util.Arrays.asList;
 
-@RunWith(LiquiBaseMigrationScriptsTestRunner.class)
+@Testcontainers
 @SchemaDetails(
         migrationUser = "test",
         migrationPassword = "test",
         url = "jdbc:tc:mysql://localhost/test?serverTimezone=UTC",
         snapshotScript = "schema.sql")
 @MigrationScript(filename = "migration-scripts.xml")
-public class LiquibaseScriptsTest extends LiquiBaseMigrationScriptTestBase {
+public class LiquibaseScriptsTest extends LiquibaseMigrationScriptTestBase {
 
-    @ClassRule
-    public static MySQLContainer mysql = new MySQLContainer();
+    @Container
+    private final MySQLContainer mysql = new MySQLContainer();
 
-    public static List<LiquiBaseMigrationTestDefinition> getTestDefinitions() {
+    @Override
+    protected List<LiquibaseMigrationTestDefinition> testDefinitions() {
         return asList(new CreateExampleTable());
     }
 }

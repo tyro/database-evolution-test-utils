@@ -23,8 +23,8 @@ import java.util.*;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class PrivilegeAssert {
 
@@ -48,14 +48,16 @@ public class PrivilegeAssert {
                 .map(Enum::name)
                 .collect(toList());
 
-        assertTrue(format("These privileges: %s should be granted to user: %s for table: %s.", missingPrivileges, username, tableName), missingPrivileges.isEmpty());
+        assertTrue(missingPrivileges.isEmpty(),
+                format("These privileges: %s should be granted to user: %s for table: %s.", missingPrivileges, username, tableName));
 
         List<String> unexpectedPrivileges = tablePrivileges.stream()
                 .filter(tablePrivilege -> !expectedPrivileges.contains(tablePrivilege))
                 .map(Enum::name)
                 .collect(toList());
 
-        assertTrue(format("These privileges: %s should not be granted to user: %s for table: %s.", unexpectedPrivileges, username, tableName), unexpectedPrivileges.isEmpty());
+        assertTrue(unexpectedPrivileges.isEmpty(),
+                format("These privileges: %s should not be granted to user: %s for table: %s.", unexpectedPrivileges, username, tableName));
 
         return this;
     }

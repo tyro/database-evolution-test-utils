@@ -18,7 +18,8 @@ package com.tyro.oss.dbevolution.assertions;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.ForeignKey;
 
-import static org.junit.Assert.*;
+import static java.lang.String.format;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ForeignKeyAssert {
 
@@ -51,18 +52,21 @@ public class ForeignKeyAssert {
     }
 
     public ForeignKeyAssert isPresent() {
-        assertNotNull("Foreign Key not found for " + keyAsString, foreignKey);
+        assertNotNull(foreignKey,
+                format("Foreign Key not found for %s", keyAsString));
         return this;
     }
 
     public ForeignKeyAssert isNotPresent() {
-        assertNull("Foreign Key exists for " + keyAsString, foreignKey);
+        assertNull(foreignKey,
+                format("Foreign Key exists for %s", keyAsString));
         return this;
     }
 
     public ForeignKeyAssert withName(String expectedKeyName) {
         isPresent();
-        assertEquals("Name of Foreign Key " + keyAsString, expectedKeyName, foreignKey.getName());
+        assertEquals(expectedKeyName, foreignKey.getName(),
+                format("Name of Foreign Key %s", keyAsString));
         return this;
     }
 

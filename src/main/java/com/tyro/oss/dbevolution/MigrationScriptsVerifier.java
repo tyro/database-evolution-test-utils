@@ -29,14 +29,12 @@ import liquibase.resource.ClassLoaderResourceAccessor;
 import org.springframework.core.io.Resource;
 
 import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
+import static java.lang.String.format;
 import static liquibase.precondition.core.PreconditionContainer.ErrorOption;
 import static liquibase.precondition.core.PreconditionContainer.FailOption;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class MigrationScriptsVerifier {
 
@@ -44,12 +42,12 @@ public class MigrationScriptsVerifier {
     private final Connection connection;
     private final String migrationScriptsFilename;
     private final Resource schemaFile;
+    private final List<String> changeSetFilesUnderTest;
+    private final Set<String> changesetPreconditionExclusions;
     private List<String> newChangeSetFilesCompleted;
-    private List<String> changeSetFilesUnderTest;
     private DatabaseChangeLog changeLog;
-    private Set<String> changesetPreconditionExclusions;
 
-    MigrationScriptsVerifier(DatabaseHelper databaseHelper, Connection connection, Resource schemaFile, String migrationScriptsFilename, List<LiquiBaseMigrationTestDefinition> testDefinitions) {
+    MigrationScriptsVerifier(DatabaseHelper databaseHelper, Connection connection, Resource schemaFile, String migrationScriptsFilename, Collection<LiquibaseMigrationTestDefinition> testDefinitions) {
         this.databaseHelper = databaseHelper;
         this.connection = connection;
         this.schemaFile = schemaFile;
@@ -57,7 +55,7 @@ public class MigrationScriptsVerifier {
         this.changesetPreconditionExclusions = new HashSet<>();
 
         changeSetFilesUnderTest = new ArrayList<>();
-        for (LiquiBaseMigrationTestDefinition testDefinition : testDefinitions) {
+        for (LiquibaseMigrationTestDefinition testDefinition : testDefinitions) {
             changeSetFilesUnderTest.add(testDefinition.getMigrationScriptFilename());
             if (testDefinition.isAllowAnyPreconditionOnFailHandling()) {
                 changesetPreconditionExclusions.add(testDefinition.getMigrationScriptFilename());
@@ -104,12 +102,15 @@ public class MigrationScriptsVerifier {
 
             PreconditionContainer preconditions = changeSet.getPreconditions();
 
-            assertNotNull(changeSetName + " has no preconditions. Preconditions are required.", preconditions);
+            assertNotNull(preconditions,
+                    format("%s has no preconditions. Preconditions are required.", changeSetName));
 
-            assertEquals(changeSetName + " should HALT on error.", ErrorOption.HALT, preconditions.getOnError());
+            assertEquals(ErrorOption.HALT, preconditions.getOnError(),
+                    format("%s should HALT on error.", changeSetName));
 
             if (!changesetPreconditionExclusions.contains(changeSetName)) {
-                assertEquals(changeSetName + " should HALT on fail.", FailOption.HALT, preconditions.getOnFail());
+                assertEquals(FailOption.HALT, preconditions.getOnFail(),
+                        format("%s should HALT on fail.", changeSetName));
             } else {
                 System.out.println("Skipping precondition check for " + changeSetName);
             }
@@ -118,8 +119,8 @@ public class MigrationScriptsVerifier {
 
     private void checkAllChangeLogsNamedInTestsHaveBeenExecuted() {
         for (String changeSetInDatabaseMigrationScriptsFile : newChangeSetFilesCompleted) {
-            assertTrue("There is no test listed for the " + changeSetInDatabaseMigrationScriptsFile + " migration script.",
-                    changeSetFilesUnderTest.contains(changeSetInDatabaseMigrationScriptsFile));
+            assertTrue(changeSetFilesUnderTest.contains(changeSetInDatabaseMigrationScriptsFile),
+                    "There is no test listed for the " + changeSetInDatabaseMigrationScriptsFile + " migration script.");
         }
     }
 
@@ -127,11 +128,11 @@ public class MigrationScriptsVerifier {
         for (String changeSetUnderTest : changeSetFilesUnderTest) {
             boolean isExtraReleaseScript = changeSetUnderTest.startsWith("extra-release");
             if (!isExtraReleaseScript) {
-                assertTrue("The " + changeSetUnderTest + " migration script does not appear in " + migrationScriptsFilename + " or was already run before the current snapshot.",
-                        newChangeSetFilesCompleted.contains(changeSetUnderTest));
+                assertTrue(newChangeSetFilesCompleted.contains(changeSetUnderTest),
+                        format("The %s migration script does not appear in %s or was already run before the current snapshot.", changeSetUnderTest, migrationScriptsFilename));
             } else {
-                assertFalse("The " + changeSetUnderTest + " migration script SHOULD NOT appear in " + migrationScriptsFilename + " because it is an extra-release script and should not be run automatically.",
-                        newChangeSetFilesCompleted.contains(changeSetUnderTest));
+                assertFalse(newChangeSetFilesCompleted.contains(changeSetUnderTest),
+                        format("The %s migration script SHOULD NOT appear in %s because it is an extra-release script and should not be run automatically.", changeSetUnderTest, migrationScriptsFilename));
             }
         }
     }
