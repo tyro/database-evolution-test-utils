@@ -47,7 +47,7 @@ public class MigrationScriptsVerifier {
     private List<String> newChangeSetFilesCompleted;
     private DatabaseChangeLog changeLog;
 
-    MigrationScriptsVerifier(DatabaseHelper databaseHelper, Connection connection, Resource schemaFile, String migrationScriptsFilename, Collection<LiquiBaseMigrationTestDefinition> testDefinitions) {
+    MigrationScriptsVerifier(DatabaseHelper databaseHelper, Connection connection, Resource schemaFile, String migrationScriptsFilename, Collection<LiquibaseMigrationTestDefinition> testDefinitions) {
         this.databaseHelper = databaseHelper;
         this.connection = connection;
         this.schemaFile = schemaFile;
@@ -55,7 +55,7 @@ public class MigrationScriptsVerifier {
         this.changesetPreconditionExclusions = new HashSet<>();
 
         changeSetFilesUnderTest = new ArrayList<>();
-        for (LiquiBaseMigrationTestDefinition testDefinition : testDefinitions) {
+        for (LiquibaseMigrationTestDefinition testDefinition : testDefinitions) {
             changeSetFilesUnderTest.add(testDefinition.getMigrationScriptFilename());
             if (testDefinition.isAllowAnyPreconditionOnFailHandling()) {
                 changesetPreconditionExclusions.add(testDefinition.getMigrationScriptFilename());

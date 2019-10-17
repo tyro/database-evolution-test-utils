@@ -30,13 +30,13 @@ import static java.util.Arrays.asList;
         url = "jdbc:tc:mysql://localhost/test?serverTimezone=UTC",
         snapshotScript = "schema.sql")
 @MigrationScript(filename = "migration-scripts.xml")
-public class LiquibaseScriptsTest extends LiquiBaseMigrationScriptTestBase {
+public class LiquibaseScriptsTest extends LiquibaseMigrationScriptTestBase {
 
     @Container
     private final MySQLContainer mysql = new MySQLContainer();
 
     @Override
-    protected List<LiquiBaseMigrationTestDefinition> testDefinitions() {
+    protected List<LiquibaseMigrationTestDefinition> testDefinitions() {
         return asList(new CreateExampleTable());
     }
 }

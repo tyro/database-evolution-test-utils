@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 
 import static com.tyro.oss.dbevolution.assertions.Assertions.assertThatSchema;
 
-public class CreateExampleTable extends LiquiBaseMigrationTestDefinition {
+public class CreateExampleTable extends LiquibaseMigrationTestDefinition {
 
     @Override
     protected void assertPreMigrationSchema(Database schema, Connection connection) {

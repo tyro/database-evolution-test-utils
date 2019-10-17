@@ -25,25 +25,25 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class LiquiBaseMigrationTestDefinition {
+public abstract class LiquibaseMigrationTestDefinition {
 
     private final String migrationName;
     private final String migrationScriptLocation;
     private final boolean allowAnyPreconditionOnFailHandling;
 
-    public LiquiBaseMigrationTestDefinition() {
+    public LiquibaseMigrationTestDefinition() {
         this.allowAnyPreconditionOnFailHandling = false;
         this.migrationName = getClass().getSimpleName();
         this.migrationScriptLocation = deriveMigrationScriptLocationFromTestPackage();
     }
 
-    public LiquiBaseMigrationTestDefinition(boolean allowAnyPreconditionOnFailHandling) {
+    public LiquibaseMigrationTestDefinition(boolean allowAnyPreconditionOnFailHandling) {
         this.allowAnyPreconditionOnFailHandling = allowAnyPreconditionOnFailHandling;
         this.migrationName = getClass().getSimpleName();
         this.migrationScriptLocation = deriveMigrationScriptLocationFromTestPackage();
     }
 
-    public LiquiBaseMigrationTestDefinition(String migrationScriptLocation) {
+    public LiquibaseMigrationTestDefinition(String migrationScriptLocation) {
         this.allowAnyPreconditionOnFailHandling = false;
         this.migrationName = getClass().getSimpleName();
         this.migrationScriptLocation = migrationScriptLocation;

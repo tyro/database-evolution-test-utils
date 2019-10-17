@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
 @TestMethodOrder(OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class LiquiBaseMigrationScriptTestBase {
+public abstract class LiquibaseMigrationScriptTestBase {
 
     protected String migrationScriptFilename;
     protected Resource schemaSnapshot;
@@ -100,9 +100,9 @@ public abstract class LiquiBaseMigrationScriptTestBase {
         migrationScriptsVerifier.allScriptsShouldBeTestedAndHavePreconditionsAndAllTestedFilesIncluded();
     }
 
-    protected abstract Collection<LiquiBaseMigrationTestDefinition> testDefinitions();
+    protected abstract Collection<LiquibaseMigrationTestDefinition> testDefinitions();
 
-    private void testDefinitionMigration(LiquiBaseMigrationTestDefinition definition) throws SQLException, LiquibaseException {
+    private void testDefinitionMigration(LiquibaseMigrationTestDefinition definition) throws SQLException, LiquibaseException {
         try (Connection connection = databaseHelper.getConnection()) {
             definition.assertPreMigrationSchema(getDatabase(), connection);
             if (definition.disableReferentialIntegrityForInsertingPreMigrationData()) {
@@ -138,7 +138,7 @@ public abstract class LiquiBaseMigrationScriptTestBase {
                         null);
     }
 
-    private void executeScript(LiquiBaseMigrationTestDefinition definition) throws SQLException, LiquibaseException {
+    private void executeScript(LiquibaseMigrationTestDefinition definition) throws SQLException, LiquibaseException {
         String migrationScript = definition.getMigrationScriptFilename();
         Liquibase migrator = new Liquibase(migrationScript, new ClassLoaderResourceAccessor(), new JdbcConnection(databaseHelper.getConnection()));
         migrator.update("production");
