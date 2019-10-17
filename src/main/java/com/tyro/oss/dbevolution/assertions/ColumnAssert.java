@@ -31,11 +31,11 @@ import java.util.List;
 import java.util.Map;
 
 import static com.tyro.oss.dbevolution.assertions.ColumnAssert.StandardStringColumnAssertions.DEFAULT_VARCHAR_MAX_LENGTH;
-import static com.tyro.oss.dbevolution.assertions.SchemaAssert.*;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ColumnAssert {
 
@@ -56,19 +56,21 @@ public class ColumnAssert {
 
     private static void assertColumnSize(Database database, String tableName, String columnName, int columnSize) {
         Table table = database.findTable(tableName);
-        assertEquals("Size of " + tableName + "." + columnName, columnSize, table.findColumn(columnName).getSizeAsInt());
+        assertEquals(columnSize, table.findColumn(columnName).getSizeAsInt(),
+                format("Size of %s.%s", tableName, columnName));
     }
 
     private static void assertColumnMinimalSize(Database database, String tableName, String columnName, int columnSize) {
         Table table = database.findTable(tableName);
         int actualColumnSize = table.findColumn(columnName).getSizeAsInt();
-        String message = format("Size of %s.%s should be at least %d, but was %s.", tableName, columnName, columnSize, actualColumnSize);
-        assertTrue(message, actualColumnSize >= columnSize);
+        assertTrue(actualColumnSize >= columnSize,
+                format("Size of %s.%s should be at least %d, but was %s.", tableName, columnName, columnSize, actualColumnSize));
     }
 
     private static void assertColumnScale(Database database, String tableName, String columnName, int columnScale) {
         Table table = database.findTable(tableName);
-        assertEquals("Scale of " + tableName + "." + columnName, columnScale, table.findColumn(columnName).getScale());
+        assertEquals(columnScale, table.findColumn(columnName).getScale(),
+                format("Scale of %s.%s", tableName, columnName));
     }
 
     private static void assertColumnIsTypeAndSize(Database database, String tableName, String columnName, int type, int columnSize) {
@@ -78,13 +80,16 @@ public class ColumnAssert {
 
     private static void assertColumnIsType(Database database, String tableName, String columnName, int sqlType) {
         Column column = database.findTable(tableName).findColumn(columnName);
-        assertNotNull("Column '" + columnName + "' does not exist.", column);
-        assertEquals("Type of " + tableName + "." + columnName, sqlTypeToString(sqlType), sqlTypeToString(column.getTypeCode()));
+        assertNotNull(column,
+                format("Column '%s' does not exist.", columnName));
+        assertEquals(sqlTypeToString(sqlType), sqlTypeToString(column.getTypeCode()),
+                format("Type of %s.%s", tableName, columnName));
     }
 
     private static void assertColumnIsType(Database database, String tableName, String columnName, int... sqlTypes) {
         Column column = database.findTable(tableName).findColumn(columnName);
-        assertNotNull("Column '" + columnName + "' does not exist.", column);
+        assertNotNull(column,
+                format("Column '%s' does not exist.", columnName));
 
         String actualType = sqlTypeToString(column.getTypeCode());
 
@@ -92,8 +97,8 @@ public class ColumnAssert {
                 .mapToObj(ColumnAssert::sqlTypeToString)
                 .collect(toList());
 
-        String message = format("Type of %s.%s should be one of %s, but was %s.", tableName, columnName, expectedTypes, actualType);
-        assertTrue(message, expectedTypes.contains(actualType));
+        assertTrue(expectedTypes.contains(actualType),
+                format("Type of %s.%s should be one of %s, but was %s.", tableName, columnName, expectedTypes, actualType));
     }
 
     private static String sqlTypeToString(int sqlType) {
@@ -128,13 +133,15 @@ public class ColumnAssert {
 
     private static void assertColumnIsNullable(Database database, String tableName, String columnName) {
         Table table = database.findTable(tableName);
-        assertFalse(tableName + "." + columnName + " should be nullable", table.findColumn(columnName).isRequired());
+        assertFalse(table.findColumn(columnName).isRequired(),
+                format("%s.%s should be nullable", tableName, columnName));
     }
 
     private static void assertColumnIsNotNullable(Database database, String tableName, String columnName) {
         Table table = database.findTable(tableName);
         Column column = table.findColumn(columnName);
-        assertTrue(tableName + "." + columnName + " should be NOT NULL", column.isRequired());
+        assertTrue(column.isRequired(),
+                format("%s.%s should be NOT NULL", tableName, columnName));
     }
 
     private static void assertColumnHasDefaultValue(Database database, String tableName, String columnName, Object defaultValue) {
@@ -191,12 +198,14 @@ public class ColumnAssert {
 
     private void assertColumnInTable(Database database, String tableName, String columnName) {
         Table table = database.findTable(tableName);
-        assertNotNull("Column '" + columnName + "' not present in '" + database.getName() + "." + tableName + "'", table.findColumn(columnName));
+        assertNotNull(table.findColumn(columnName),
+                format("Column '%s' not present in '%s.%s'", columnName, database.getName(), tableName));
     }
 
     private void assertColumnNotInTable(Database database, String tableName, String columnName) {
         Table table = database.findTable(tableName);
-        assertNull("Column " + tableName + "." + columnName + " should not exist", table.findColumn(columnName));
+        assertNull(table.findColumn(columnName),
+                format("Column %s.%s should not exist", tableName, columnName));
     }
 
     public ColumnAssert supportsType(Class<?> hibernateFieldType) {
@@ -303,25 +312,31 @@ public class ColumnAssert {
         for (int i = 0; i < table1.getColumns().length; i++) {
             String columnName = table1.getColumns()[i].getName();
             if (asList(primaryKeyColumnNames).contains(columnName)) {
-                assertTrue(columnName + " should be a primary key member", table1.findColumn(columnName).isPrimaryKey());
+                assertTrue(table1.findColumn(columnName).isPrimaryKey(),
+                        format("%s should be a primary key member", columnName));
                 numberPrimaryKeys++;
             }
         }
-        assertEquals("Number of columns in " + table.getName() + "primary key", primaryKeyColumnNames.length, numberPrimaryKeys);
+        assertEquals(primaryKeyColumnNames.length, numberPrimaryKeys,
+                format("Number of columns in %sprimary key", table.getName()));
         return this;
     }
 
     public ColumnAssert isAutoIncrementing() {
         Column column = schema.findTable(table.getName()).findColumn(name);
-        assertNotNull("Column '" + name + "' does not exist.", column);
-        assertTrue(table.getName() + "." + name + " should be auto-increment", column.isAutoIncrement());
+        assertNotNull(column,
+                format("Column '%s' does not exist.", name));
+        assertTrue(column.isAutoIncrement(),
+                format("%s.%s should be auto-increment", table.getName(), name));
         return this;
     }
 
     public ColumnAssert isNotAutoIncrementing() {
         Column column = schema.findTable(table.getName()).findColumn(name);
-        assertNotNull("Column '" + name + "' does not exist.", column);
-        assertFalse(table.getName() + "." + name + " should not be auto-increment", column.isAutoIncrement());
+        assertNotNull(column,
+                format("Column '%s' does not exist.", name));
+        assertFalse(column.isAutoIncrement(),
+                format("%s.%s should not be auto-increment", table.getName(), name));
         return this;
     }
 
@@ -334,7 +349,8 @@ public class ColumnAssert {
     }
 
     public ForeignKeyAssert hasForeignKeyTo(String targetTable, String targetColumn) {
-        assertNotEquals(format("use hasForeignKeyTo(String targetTable) when the target column is \"%s\"", ID_COLUMN_NAME), ID_COLUMN_NAME, targetColumn);
+        assertNotEquals(ID_COLUMN_NAME, targetColumn,
+                format("use hasForeignKeyTo(String targetTable) when the target column is \"%s\"", ID_COLUMN_NAME));
         return new ForeignKeyAssert(schema, this, targetTable, targetColumn).isPresent();
     }
 
@@ -343,7 +359,8 @@ public class ColumnAssert {
     }
 
     public ColumnAssert doesNotHaveForeignKeyTo(String targetTable, String targetColumn) {
-        assertNotEquals(format("use doesNotHaveForeignKeyTo(String targetTable) when the target column is \"%s\"", ID_COLUMN_NAME), ID_COLUMN_NAME, targetColumn);
+        assertNotEquals(ID_COLUMN_NAME, targetColumn,
+                format("use doesNotHaveForeignKeyTo(String targetTable) when the target column is \"%s\"", ID_COLUMN_NAME));
         return new ForeignKeyAssert(schema, this, targetTable, targetColumn).isNotPresent().andColumn();
     }
 

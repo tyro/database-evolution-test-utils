@@ -16,13 +16,12 @@
 package com.tyro.oss.dbevolution.assertions;
 
 import org.apache.ddlutils.model.Database;
-import org.junit.Assert;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
-public class SchemaAssert extends Assert {
+public class SchemaAssert {
 
     private final Database schema;
     private final DatabaseMetaData databaseMetadata;

@@ -31,7 +31,7 @@ import java.util.Map;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.join;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DataAssert {
 
@@ -47,7 +47,7 @@ public class DataAssert {
         PreparedStatement statement = connection.prepareStatement("select count(*) from " + tableName);
         ResultSet result = statement.executeQuery();
         result.next();
-        assertEquals("Number of rows in " + tableName, 0, result.getInt(1));
+        assertEquals(0, result.getInt(1), format("Number of rows in %s", tableName));
         return this;
     }
 
@@ -90,7 +90,7 @@ public class DataAssert {
             ResultSet rs = ps.executeQuery();
             assertTrue(rs.next());
             long actualRowCount = rs.getLong(1);
-            assertEquals("# of rows in " + tableName, expectedRowCount, actualRowCount);
+            assertEquals(expectedRowCount, actualRowCount, format("# of rows in %s", tableName));
             assertFalse(rs.next());
         }
 
@@ -101,7 +101,7 @@ public class DataAssert {
         List<Row> rowsForTableA = getRowsForTable(tableA, columnNames, connection);
         List<Row> rowsForTableB = getRowsForTable(tableB, columnNames, connection);
 
-        assertEquals(format("%s does not have the same number of rows as %s", tableA, tableB), rowsForTableA.size(), rowsForTableB.size());
+        assertEquals(rowsForTableA.size(), rowsForTableB.size(), format("%s does not have the same number of rows as %s", tableA, tableB));
         assertEquals(rowsForTableA, rowsForTableB);
 
         return this;
@@ -116,7 +116,8 @@ public class DataAssert {
         assertTrue(rs.next());
         do {
             for (int i = 1; i < columnA.length + 1; i++) {
-                assertTrue("column " + columnA[i - 1] + " didn't match " + columnB[i - 1], rs.getBoolean(i));
+                assertTrue(rs.getBoolean(i),
+                        format("column %s didn't match %s", columnA[i - 1], columnB[i - 1]));
             }
         } while (rs.next());
 

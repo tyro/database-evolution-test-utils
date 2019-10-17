@@ -16,6 +16,7 @@
 package com.tyro.oss.dbevolution;
 
 import com.tyro.oss.dbevolution.database.DatabaseHelper;
+import com.tyro.oss.dbevolution.database.DatabaseHelperFactory;
 import liquibase.Liquibase;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.LiquibaseException;
@@ -24,40 +25,34 @@ import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.beanutils.ConvertUtilsBean;
 import org.apache.commons.beanutils.Converter;
 import org.apache.ddlutils.model.Database;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.*;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collection;
+import java.util.stream.Stream;
 
+import static java.lang.String.format;
 import static org.apache.ddlutils.PlatformFactory.createNewPlatformInstance;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.DynamicTest.dynamicTest;
+import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
+@TestMethodOrder(OrderAnnotation.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class LiquiBaseMigrationScriptTestBase {
 
-    public static DatabaseHelper databaseHelper;
-    public static Resource schemaSnapshot;
-    public static MigrationScriptsVerifier migrationScriptsVerifier;
+    protected String migrationScriptFilename;
+    protected Resource schemaSnapshot;
+    protected DatabaseHelper databaseHelper;
 
-    LiquiBaseMigrationTestDefinition definition;
-
-    @BeforeClass
-    public static void runOnce() {
-        try {
-            databaseHelper.dropAndRecreateDatabaseFromSnapshot(schemaSnapshot);
-        } catch (Exception e) {
-            System.err.println("Failed to install starting schema: " + e);
-            e.printStackTrace();
-            fail("Failed to install starting schema: " + e);
-        }
-    }
-
-    @BeforeClass
-    public static void setUpConverterForBitColumns() {
+    @BeforeAll
+    protected void setUpConverterForBitColumns() {
         ConvertUtilsBean convertUtils = BeanUtilsBean.getInstance().getConvertUtils();
-        final Converter originalBooleanConverter = convertUtils.lookup(Boolean.class);
+        Converter originalBooleanConverter = convertUtils.lookup(Boolean.class);
         convertUtils.register((type, value) -> {
             if (Boolean.class.equals(type)) {
                 if ("b'1'".equals(value)) {
@@ -70,57 +65,82 @@ public abstract class LiquiBaseMigrationScriptTestBase {
         }, Boolean.class);
     }
 
-    @Test
-    public void testDefinitionMigration() throws SQLException, LiquibaseException {
+    @BeforeAll
+    protected void setUpDatabase() {
+        SchemaDetails schemaDetails = this.getClass().getAnnotation(SchemaDetails.class);
+        MigrationScript migrationScript = this.getClass().getAnnotation(MigrationScript.class);
+
         try {
-            definition.assertPreMigrationSchema(getDatabase(), getConnection());
+            schemaSnapshot = new ClassPathResource(schemaDetails.snapshotScript());
+            migrationScriptFilename = migrationScript.filename();
+        } catch (NullPointerException e) {
+            throw new NullPointerException("Please specify a @SchemaDetails and @MigrationScript annotation in your test.");
+        }
+
+        try {
+            databaseHelper = DatabaseHelperFactory.newInstance(schemaDetails, schemaSnapshot);
+            databaseHelper.dropAndRecreateDatabaseFromSnapshot(schemaSnapshot);
+        } catch (Exception e) {
+            fail("Failed to install starting schema", e);
+        }
+    }
+
+    @TestFactory
+    @Order(1)
+    protected Stream<DynamicTest> liquibaseMigrations() {
+        return testDefinitions()
+                .stream()
+                .map(definition -> dynamicTest(definition.getMigrationName(), () -> testDefinitionMigration(definition)));
+    }
+
+    @Test
+    @Order(2)
+    protected void allScriptsShouldBeTestedAndHavePreconditionsAndAllTestedFilesIncluded() throws Exception {
+        MigrationScriptsVerifier migrationScriptsVerifier = new MigrationScriptsVerifier(databaseHelper, databaseHelper.getDataSource().getConnection(), this.schemaSnapshot, migrationScriptFilename, testDefinitions());
+        migrationScriptsVerifier.allScriptsShouldBeTestedAndHavePreconditionsAndAllTestedFilesIncluded();
+    }
+
+    protected abstract Collection<LiquiBaseMigrationTestDefinition> testDefinitions();
+
+    private void testDefinitionMigration(LiquiBaseMigrationTestDefinition definition) throws SQLException, LiquibaseException {
+        try (Connection connection = databaseHelper.getConnection()) {
+            definition.assertPreMigrationSchema(getDatabase(), connection);
             if (definition.disableReferentialIntegrityForInsertingPreMigrationData()) {
                 setReferentialIntegrity(false);
             }
             try {
-                definition.insertPreMigrationData(getConnection());
-                getConnection().commit();
+                definition.insertPreMigrationData(connection);
+                connection.commit();
             } finally {
                 setReferentialIntegrity(true);
             }
-            definition.assertPreMigrationData(getConnection());
-            executeScript();
-            definition.assertPostMigrationSchema(getDatabase(), getConnection());
-            definition.assertPostMigrationData(getConnection());
-            getConnection().commit();
-        } finally {
-            getConnection().close();
+            definition.assertPreMigrationData(connection);
+            executeScript(definition);
+            definition.assertPostMigrationSchema(getDatabase(), connection);
+            definition.assertPostMigrationData(connection);
+            connection.commit();
         }
     }
 
-    public void allScriptsShouldBeTestedAndHavePreconditionsAndAllTestedFilesIncluded() throws Exception {
-        migrationScriptsVerifier.allScriptsShouldBeTestedAndHavePreconditionsAndAllTestedFilesIncluded();
-    }
-
     private void setReferentialIntegrity(boolean on) throws SQLException {
-        String statementString = "SET FOREIGN_KEY_CHECKS = " + (on ? "1" : "0");
-        Statement statement = databaseHelper.getConnection().createStatement();
-        statement.execute(statementString);
-        statement.close();
-    }
-
-    private Connection getConnection() throws SQLException {
-        return databaseHelper.getConnection();
+        try (Statement statement = databaseHelper.getConnection().createStatement()) {
+            statement.execute(format("SET FOREIGN_KEY_CHECKS = %s", on ? "1" : "0"));
+        }
     }
 
     private Database getDatabase() throws SQLException {
-        return createNewPlatformInstance(databaseHelper.getDataSource()).readModelFromDatabase(
-                getConnection(),
-                databaseHelper.getDatabaseDetails().getSchemaName(),
-                databaseHelper.getDatabaseDetails().getSchemaName(),
-                null,
-                null);
+        return createNewPlatformInstance(databaseHelper.getDataSource())
+                .readModelFromDatabase(
+                        databaseHelper.getConnection(),
+                        databaseHelper.getDatabaseDetails().getSchemaName(),
+                        databaseHelper.getDatabaseDetails().getSchemaName(),
+                        null,
+                        null);
     }
 
-    private void executeScript() throws SQLException, LiquibaseException {
+    private void executeScript(LiquiBaseMigrationTestDefinition definition) throws SQLException, LiquibaseException {
         String migrationScript = definition.getMigrationScriptFilename();
-        Liquibase migrator = new Liquibase(migrationScript, new ClassLoaderResourceAccessor(), new JdbcConnection(getConnection()));
+        Liquibase migrator = new Liquibase(migrationScript, new ClassLoaderResourceAccessor(), new JdbcConnection(databaseHelper.getConnection()));
         migrator.update("production");
     }
 }
-

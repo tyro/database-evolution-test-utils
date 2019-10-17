@@ -22,10 +22,11 @@ import java.util.List;
 import java.util.Set;
 
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TableAssert {
 
@@ -49,11 +50,13 @@ public class TableAssert {
     }
 
     private void assertTablePresent(Database database, String tableName) {
-        assertNotNull("Table '" + database.getName() + "." + tableName + "' not present", database.findTable(tableName));
+        assertNotNull(database.findTable(tableName),
+                format("Table '%s.%s' not present", database.getName(), tableName));
     }
 
     private void assertTableNotPresent(Database database, String tableName) {
-        assertNull("Table " + tableName + " should not exist", database.findTable(tableName));
+        assertNull(database.findTable(tableName),
+                format("Table %s should not exist", tableName));
     }
 
     public ColumnAssert hasColumn(String columnName) {
@@ -86,7 +89,7 @@ public class TableAssert {
     }
 
     public TableAssert hasNoIndexes() {
-        assertEquals("Index count", 0, schema.findTable(name).getIndexCount());
+        assertEquals(0, schema.findTable(name).getIndexCount(), "Index count");
         return this;
     }
 
@@ -102,9 +105,11 @@ public class TableAssert {
         Index matchingIndex = indexOnColumns(columnNames);
 
         if (wantToFindIndex) {
-            assertNotNull("No matching index found on column/s (" + String.join(",", columnNames) + ")", matchingIndex);
+            assertNotNull(matchingIndex,
+                    format("No matching index found on column/s (%s)", join(",", columnNames)));
         } else {
-            assertNull("Matching index found on column " + String.join(",", columnNames), matchingIndex);
+            assertNull(matchingIndex,
+                    format("Matching index found on column %s", join(",", columnNames)));
         }
         return this;
     }
@@ -113,14 +118,18 @@ public class TableAssert {
         Index matchingIndex = indexOnColumns(columnNames);
 
         if (wantToFindIndex) {
-            assertNotNull("No matching index found on column " + String.join(",", columnNames), matchingIndex);
+            assertNotNull(matchingIndex,
+                    format("No matching index found on column %s", join(",", columnNames)));
             if (isUniqueIndex) {
-                assertTrue("Matching index found but not unique", matchingIndex.isUnique());
+                assertTrue(matchingIndex.isUnique(),
+                        "Matching index found but not unique");
             } else {
-                assertFalse("Matching index found but it's specified as 'unique'", matchingIndex.isUnique());
+                assertFalse(matchingIndex.isUnique(),
+                        "Matching index found but it's specified as 'unique'");
             }
         } else {
-            assertNull("Matching index found on column " + String.join(",", columnNames), matchingIndex);
+            assertNull(matchingIndex,
+                    format("Matching index found on column %s", join(",", columnNames)));
         }
         return this;
     }
@@ -147,9 +156,9 @@ public class TableAssert {
                 .orElse(null);
 
         if (wantToFindIndex) {
-            assertNotNull("Matching index found", matchingIndex);
+            assertNotNull(matchingIndex, "Matching index not found");
         } else {
-            assertNull("Matching index found", matchingIndex);
+            assertNull(matchingIndex, "Matching index found");
         }
         return this;
     }
@@ -179,7 +188,9 @@ public class TableAssert {
                 }
             }
         }
-        assertTrue(format("Foreign Key from column %s to table %s column %s does not exit", localTableColumn, foreignTableName, foreignTableColumn), matchFound);
+
+        assertTrue(matchFound,
+                format("Foreign Key from column %s to table %s column %s does not exit", localTableColumn, foreignTableName, foreignTableColumn));
 
         return this;
     }
