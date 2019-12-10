@@ -104,7 +104,6 @@ public abstract class LiquibaseMigrationScriptTestBase {
 
     private void testDefinitionMigration(LiquibaseMigrationTestDefinition definition) throws SQLException, LiquibaseException {
         try (Connection connection = databaseHelper.getConnection()) {
-            definition.assertPreMigrationSchema(getDatabase(), connection);
             if (definition.disableReferentialIntegrityForInsertingPreMigrationData()) {
                 setReferentialIntegrity(false);
             }
@@ -114,11 +113,22 @@ public abstract class LiquibaseMigrationScriptTestBase {
             } finally {
                 setReferentialIntegrity(true);
             }
+
+            definition.assertPreMigrationSchema(getDatabase(), connection);
             definition.assertPreMigrationData(connection);
             executeScript(definition);
             definition.assertPostMigrationSchema(getDatabase(), connection);
             definition.assertPostMigrationData(connection);
-            connection.commit();
+
+            if (definition.disableReferentialIntegrityForInsertingPreMigrationData()) {
+                setReferentialIntegrity(false);
+            }
+            try {
+                definition.deletePostMigrationData(connection);
+                connection.commit();
+            } finally {
+                setReferentialIntegrity(true);
+            }
         }
     }
 

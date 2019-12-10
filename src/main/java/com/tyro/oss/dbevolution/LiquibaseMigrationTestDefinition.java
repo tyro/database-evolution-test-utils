@@ -101,6 +101,9 @@ public abstract class LiquibaseMigrationTestDefinition {
     protected void assertPostMigrationData(Connection connection) throws SQLException {
     }
 
+    protected void deletePostMigrationData(Connection connection) throws SQLException {
+    }
+
     public boolean disableReferentialIntegrityForInsertingPreMigrationData() {
         return false;
     }
