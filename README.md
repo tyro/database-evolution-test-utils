@@ -13,7 +13,7 @@ database-evolution-test-utils is available on Maven Central.
 <dependency>
     <groupId>com.tyro.oss</groupId>
     <artifactId>database-evolution-test-utils</artifactId>
-    <version>1.0</version>
+    <version>2.0</version>
     <scope>test</scope>
 </dependency>
 ```
