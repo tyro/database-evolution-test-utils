@@ -418,7 +418,7 @@ public class ColumnAssert {
             this.columnAssert = columnAssert;
         }
 
-        public ColumnAssert checkedBy(String developers) {
+        public ColumnAssert checkedBy(String... developers) {
             columnAssert.disableNullCheck = true;
             return this.columnAssert;
         }
