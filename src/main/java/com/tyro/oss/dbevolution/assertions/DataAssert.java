@@ -51,7 +51,7 @@ public class DataAssert {
         return this;
     }
 
-    public DataAssert hasRow(String columnName, String valueToMatch) throws SQLException {
+    public DataAssert hasRowWithValue(String columnName, String valueToMatch) throws SQLException {
         PreparedStatement statement;
         if (valueToMatch == null) {
             statement = connection.prepareStatement("select * from " + tableName + " where " + columnName + " IS NULL");
