@@ -40,9 +40,10 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ColumnAssert {
 
     private static final String ID_COLUMN_NAME = "id";
+    private static final Map<Class<?>, ColumnTypeAssertions> columnTypeAssertions = createTypeAssertions();
+
     private final TableAssert table;
     private final String name;
-    private final Map<Class<?>, ColumnTypeAssertions> columnTypeAssertions = new HashMap<>();
     private final Database schema;
     private NullCheckColumnType columnType;
     private boolean disableNullCheck;
@@ -51,7 +52,6 @@ public class ColumnAssert {
         this.schema = schema;
         this.table = tableAssert;
         this.name = columnName;
-        createTypeAssertions(schema);
     }
 
     private static void assertColumnSize(Database database, String tableName, String columnName, int columnSize) {
@@ -161,29 +161,35 @@ public class ColumnAssert {
         assertColumnScale(database, tableName, columnName, scale);
     }
 
-    private void createTypeAssertions(Database schema) {
-        columnTypeAssertions.put(Boolean.class, new BooleanColumnAssertions(schema));
-        columnTypeAssertions.put(Boolean.TYPE, new BooleanColumnAssertions(schema));
+    private static Map<Class<?>, ColumnTypeAssertions> createTypeAssertions() {
+        Map<Class<?>, ColumnTypeAssertions> columnTypeAssertions = new HashMap<>();
+        columnTypeAssertions.put(Boolean.class, new BooleanColumnAssertions());
+        columnTypeAssertions.put(Boolean.TYPE, new BooleanColumnAssertions());
         columnTypeAssertions.put(Character.class, new CharacterColumnAssertions(1));
         columnTypeAssertions.put(Character.TYPE, new CharacterColumnAssertions(1));
         columnTypeAssertions.put(Enum.class, new StandardEnumColumnAssertions());
-        columnTypeAssertions.put(Integer.class, new IntegerColumnAssertions(schema));
-        columnTypeAssertions.put(Integer.TYPE, new IntegerColumnAssertions(schema));
+        columnTypeAssertions.put(Integer.class, new IntegerColumnAssertions());
+        columnTypeAssertions.put(Integer.TYPE, new IntegerColumnAssertions());
         columnTypeAssertions.put(Double.class, new DoubleColumnAssertions());
         columnTypeAssertions.put(Double.TYPE, new DoubleColumnAssertions());
         columnTypeAssertions.put(Long.class, new LongColumnAssertions());
         columnTypeAssertions.put(Long.TYPE, new LongColumnAssertions());
         columnTypeAssertions.put(BigDecimal.class, new BigDecimalColumnAssertions());
-        columnTypeAssertions.put(YearMonth.class, new YearMonthColumnAssertions(schema));
+        columnTypeAssertions.put(YearMonth.class, new YearMonthColumnAssertions());
         columnTypeAssertions.put(LocalDate.class, new DateCompatibleColumnAssertions());
         columnTypeAssertions.put(LocalTime.class, new LocalTimeColumnAssertions());
         columnTypeAssertions.put(LocalDateTime.class, new DateTimeColumnAssertions());
         columnTypeAssertions.put(ZoneId.class, new ZoneIdColumnAssertions());
         columnTypeAssertions.put(String.class, new StandardStringColumnAssertions());
-        columnTypeAssertions.put(byte[].class, new BinaryColumnAssertions(schema));
+        columnTypeAssertions.put(byte[].class, new BinaryColumnAssertions());
         columnTypeAssertions.put(TinyIntType.class, new TinyIntColumnAssertions(3));
-        columnTypeAssertions.put(BlobType.class, new BlobColumnAssertions(schema));
-        columnTypeAssertions.put(ClobType.class, new ClobColumnAssertions(schema));
+        columnTypeAssertions.put(BlobType.class, new BlobColumnAssertions());
+        columnTypeAssertions.put(ClobType.class, new ClobColumnAssertions());
+        return columnTypeAssertions;
+    }
+
+    public static void setAssertionsForType(Class<?> type, ColumnTypeAssertions assertions) {
+        columnTypeAssertions.put(type, assertions);
     }
 
     public ColumnAssert isNotPresent() {
@@ -426,7 +432,7 @@ public class ColumnAssert {
 
     private static class IntegerColumnAssertions extends ColumnTypeAssertions {
 
-        IntegerColumnAssertions(Database schema) {
+        IntegerColumnAssertions() {
             super(Types.INTEGER, 10);
         }
 
@@ -593,17 +599,14 @@ public class ColumnAssert {
 
     private static class YearMonthColumnAssertions extends ColumnTypeAssertions {
 
-        private final Database schema;
-
-        YearMonthColumnAssertions(Database schema) {
+        YearMonthColumnAssertions() {
             super(Types.CHAR, 4);
-            this.schema = schema;
         }
 
         @Override
         protected void makeAssertions(Database schema, String tableName, String columnName) {
-            assertColumnIsType(this.schema, tableName, columnName, Types.CHAR);
-            assertColumnSize(this.schema, tableName, columnName, 4);
+            assertColumnIsType(schema, tableName, columnName, Types.CHAR);
+            assertColumnSize(schema, tableName, columnName, 4);
         }
     }
 
@@ -669,16 +672,13 @@ public class ColumnAssert {
 
     private static class ClobColumnAssertions extends ColumnTypeAssertions {
 
-        private Database schema;
-
-        ClobColumnAssertions(Database schema) {
+        ClobColumnAssertions() {
             super(Types.LONGVARCHAR);
-            this.schema = schema;
         }
 
         @Override
         protected void makeAssertions(Database schema, String tableName, String columnName) {
-            assertColumnIsType(this.schema, tableName, columnName, Types.LONGVARCHAR);
+            assertColumnIsType(schema, tableName, columnName, Types.LONGVARCHAR);
         }
     }
 
@@ -697,47 +697,38 @@ public class ColumnAssert {
 
     private static class BooleanColumnAssertions extends ColumnTypeAssertions {
 
-        private final Database schema;
-
-        BooleanColumnAssertions(Database schema) {
+        BooleanColumnAssertions() {
             super(Types.BIT, 1);
-            this.schema = schema;
         }
 
         @Override
         protected void makeAssertions(Database schema, String tableName, String columnName) {
-            assertColumnIsType(this.schema, tableName, columnName, Types.BIT);
-            assertColumnSize(this.schema, tableName, columnName, 1);
+            assertColumnIsType(schema, tableName, columnName, Types.BIT);
+            assertColumnSize(schema, tableName, columnName, 1);
         }
     }
 
     private static class BlobColumnAssertions extends ColumnTypeAssertions {
 
-        private Database schema;
-
-        BlobColumnAssertions(Database schema) {
+        BlobColumnAssertions() {
             super(Types.LONGVARBINARY);
-            this.schema = schema;
         }
 
         @Override
         protected void makeAssertions(Database schema, String tableName, String columnName) {
-            assertColumnIsType(this.schema, tableName, columnName, Types.LONGVARBINARY);
+            assertColumnIsType(schema, tableName, columnName, Types.LONGVARBINARY);
         }
     }
 
     private static class BinaryColumnAssertions extends ColumnTypeAssertions {
 
-        private Database schema;
-
-        BinaryColumnAssertions(Database schema) {
+        BinaryColumnAssertions() {
             super(Types.BINARY);
-            this.schema = schema;
         }
 
         @Override
         protected void makeAssertions(Database schema, String tableName, String columnName) {
-            assertColumnIsType(this.schema, tableName, columnName, Types.BINARY);
+            assertColumnIsType(schema, tableName, columnName, Types.BINARY);
         }
     }
 
