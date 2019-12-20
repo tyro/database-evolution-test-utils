@@ -223,6 +223,11 @@ public class ColumnAssert {
         return this;
     }
 
+    public ColumnAssert supportsType(int sqlType) {
+        assertColumnIsType(schema, table.getName(), name, sqlType);
+        return this;
+    }
+
     public ColumnAssert supportsString(int minimalSize) {
         assert minimalSize >= DEFAULT_VARCHAR_MAX_LENGTH : "There is no storage saving in having a varchar less than 255 in length";
         TextualColumnAssertions textualColumnAssertions = TextualColumnAssertions.buildTextualColumnAssertions(schema).withMinimalSize(minimalSize).allowClobs().build();
