@@ -195,11 +195,15 @@ public class TableAssert {
         return this;
     }
 
-    boolean isNewTable() {
+    public Database getSchema() {
+        return schema;
+    }
+
+    public boolean isNewTable() {
         return isNewTable;
     }
 
-    String getName() {
+    public String getName() {
         return name;
     }
 }
