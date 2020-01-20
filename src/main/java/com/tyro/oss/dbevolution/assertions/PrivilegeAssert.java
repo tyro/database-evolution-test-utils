@@ -38,6 +38,15 @@ public class PrivilegeAssert {
         this.connection = connection;
     }
 
+    public PrivilegeAssert hasPrivilege(String tableName, EnumSet<TablePrivilege> expectedPrivileges) {
+        try {
+            String schemaName = connection.getCatalog();
+            return hasPrivilege(schemaName, tableName, expectedPrivileges);
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to retrieve schema name", e);
+        }
+    }
+
     public PrivilegeAssert hasPrivilege(String schemaName, String tableName, EnumSet<TablePrivilege> expectedPrivileges) {
         Set<TablePrivilege> tablePrivileges = new HashSet<>();
         tablePrivileges.addAll(getDatabaseTablePrivileges(schemaName, username, host));

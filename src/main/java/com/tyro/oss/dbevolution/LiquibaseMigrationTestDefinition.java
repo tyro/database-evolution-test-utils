@@ -85,11 +85,11 @@ public abstract class LiquibaseMigrationTestDefinition {
     }
 
     protected void assertPreMigrationSchema(Database schema, Connection connection) {
-        throw new UnsupportedOperationException("You must override either assertPreMigrationSchema(Database) or assertPreMigrationSchema(Database, Connection)");
+        throw new UnsupportedOperationException("You must override assertPreMigrationSchema(Database, Connection)");
     }
 
     protected void assertPostMigrationSchema(Database schema, Connection connection) {
-        throw new UnsupportedOperationException("You must override either assertPostMigrationSchema(Database) or assertPostMigrationSchema(Database, Connection)");
+        throw new UnsupportedOperationException("You must override assertPostMigrationSchema(Database, Connection)");
     }
 
     protected void insertPreMigrationData(Connection connection) throws SQLException {
